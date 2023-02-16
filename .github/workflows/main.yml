@@ -45,6 +45,11 @@ jobs:
         run: |
           sudo apt --quiet update
           sudo apt --quiet install --assume-yes dpkg-dev debhelper devscripts myci
+      - name: Install freight
+        run: |
+          git clone https://github.com/freight-team/freight.git
+          make -C freight && sudo make -C freight install
+          rm -rf freight
       - name: Add package
         run: |
           curl -L https://github.com/TheAssassin/AppImageLauncher/releases/download/v2.2.0/appimagelauncher_2.2.0-travis995.0f91801.bionic_arm64.deb --output appimagelauncher.deb
