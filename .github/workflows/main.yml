@@ -1,0 +1,61 @@
+
+# Simple workflow for deploying static content to GitHub Pages
+name: Deploy static deb repo to Pages
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: [main]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  # Single deploy job since we're just deploying
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Import gpg private key
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --import
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+      
+      - name: add cppfw repo to install myci scripts from
+        uses: myci-actions/add-deb-repo@master
+        with:
+          repo: deb http://gagis.hopto.org/repo/cppfw/$(lsb_release --id --short | tr '[:upper:]' '[:lower:]') $(lsb_release --codename --short) main
+          repo-name: cppfw
+          keys-asc: http://gagis.hopto.org/repo/cppfw/pubkey.gpg
+      - name: install debian package tools
+        run: |
+          sudo apt --quiet update
+          sudo apt --quiet install --assume-yes dpkg-dev debhelper devscripts myci
+      - name: Add package
+        run: |
+          curl -L https://github.com/TheAssassin/AppImageLauncher/releases/download/v2.2.0/appimagelauncher_2.2.0-travis995.0f91801.bionic_arm64.deb --output appimagelauncher.deb
+          myci-freight-add.sh --base-dir $PWD --repo minecraft-linux/deb --distro focal --component main appimagelauncher.deb
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          # Upload entire repository
+          path: '.'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
