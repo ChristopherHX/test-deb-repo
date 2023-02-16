@@ -52,8 +52,8 @@ jobs:
           rm -rf freight
       - name: Add package
         run: |
-          curl -L https://github.com/TheAssassin/AppImageLauncher/releases/download/v2.2.0/appimagelauncher_2.2.0-travis995.0f91801.bionic_arm64.deb --output appimagelauncher.deb
-          myci-freight-add.sh --base-dir $PWD --repo minecraft-linux/deb --distro focal --component main appimagelauncher.deb
+          curl -L https://github.com/TheAssassin/AppImageLauncher/releases/download/v2.2.0/appimagelauncher_2.2.0-travis995.0f91801.bionic_arm64.deb -O
+          myci-freight-add.sh --base-dir $PWD --repo minecraft-linux/deb --distro focal --component main appimagelauncher_2.2.0-travis995.0f91801.bionic_arm64.deb
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
