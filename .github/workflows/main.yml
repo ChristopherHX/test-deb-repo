@@ -112,7 +112,7 @@ jobs:
       - name: install debian package tools
         run: |
           sudo apt --quiet update
-          sudo apt --quiet install --assume-yes dpkg-dev debhelper devscripts myci
+          sudo apt --quiet install --assume-yes dpkg-dev debhelper devscripts myci rpm
       - name: Install freight
         run: |
           git clone https://github.com/freight-team/freight.git
@@ -121,26 +121,38 @@ jobs:
       - name: Download package
         uses: actions/download-artifact@v3
         with:
-          name: jammy
-          path: jammy-packages
-      - name: Download package
-        uses: actions/download-artifact@v3
-        with:
-          name: focal
-          path: focal-packages
+          path: packages
       - name: Add package
         run: |
-          myci-freight-add.sh --base-dir $PWD --repo minecraft-linux/deb --distro jammy --component main jammy-packages/*.deb
-          myci-freight-add.sh --base-dir $PWD --repo minecraft-linux/deb --distro focal --component main focal-packages/*.deb
-          rm -r focal-packages
-          rm -r jammy-packages
+          mkdir webpage
+          myci-freight-add.sh --base-dir $PWD/webpage --repo minecraft-linux/deb --distro focal --component main packages/focal/*.deb
+          myci-freight-add.sh --base-dir $PWD/webpage --repo minecraft-linux/deb --distro jammy --component main packages/jammy/*.deb
+
+          first_key_email=$(gpg --list-keys | sed -E -n -e 's/.*<([^ >]*)>.*/\1/p' | head -1)
+          echo "%_signature gpg" > ~/.rpmmacros
+          echo "%_gpg_name \"$first_key_email\"" >> ~/.rpmmacros
+          rpm --add-sign packages/fedora-36/*.rpm packages/fedora-37/*.rpm
+          mkdir -p webpage/minecraft-linux/fedora-36
+          mv packages/fedora-36/*.rpm webpage/minecraft-linux/fedora-36
+          mkdir -p webpage/minecraft-linux/fedora-37
+          mv packages/fedora-37/*.rpm webpage/minecraft-linux/fedora-37
+          docker run --rm -v $PWD/webpage:/webpage fedora:37 bash -c "dnf install -y createrepo && createrepo /webpage/minecraft-linux/fedora-36 && createrepo /webpage/minecraft-linux/fedora-37"
+          sudo chown -R "$UID:$UID" webpage/minecraft-linux/fedora-36
+          sudo chown -R "$UID:$UID" webpage/minecraft-linux/fedora-37
+      - name: Add default html
+        run: |
+          <html>
+          <body>
+          <span>deb https://christopherhx.github.io/test-deb-repo/minecraft-linux/deb jammy main</span>
+          <span>curl -sS https://christopherhx.github.io/test-deb-repo/minecraft-linux/deb/pubkey.gpg | sudo tee -a /etc/apt/trusted.gpg.d/minecraft-linux-test.asc</span>
+          </body>
+          </html>
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
-          # Upload entire repository
-          path: '.'
+          path: 'webpage'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
