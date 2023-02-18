@@ -28,13 +28,11 @@ jobs:
         mkdir mcpelauncher
         git clone --recursive https://github.com/minecraft-linux/mcpelauncher-manifest mcpelauncher/mcpelauncher-manifest
         git clone --recursive https://github.com/minecraft-linux/mcpelauncher-ui-manifest mcpelauncher/mcpelauncher-ui-manifest
-        git clone --recursive https://github.com/minecraft-linux/msa-manifest mcpelauncher/msa-manifest
     - name: Create CMakeLists.txt
       run: |
         project(mcpelauncher)
         add_subdirectory(mcpelauncher-manifest)
         add_subdirectory(mcpelauncher-ui-manifest)
-        add_subdirectory(msa-manifest)
 
         set(CPACK_GENERATOR "TGZ;DEB")
         set(CPACK_PACKAGE_CONTACT "https://github.com/minecraft-linux/mcpelauncher-manifest/issues")
