@@ -30,6 +30,7 @@ jobs:
         git clone --recursive https://github.com/minecraft-linux/mcpelauncher-ui-manifest mcpelauncher/mcpelauncher-ui-manifest
     - name: Create CMakeLists.txt
       run: |
+        cmake_minimum_required(VERSION 3.0)
         project(mcpelauncher)
         add_subdirectory(mcpelauncher-manifest)
         add_subdirectory(mcpelauncher-ui-manifest)
