@@ -59,6 +59,7 @@ jobs:
 
   # Single deploy job since we're just deploying
   deploy:
+    needs: build-linux
     # Allow one concurrent deployment
     concurrency:
       group: "pages"
