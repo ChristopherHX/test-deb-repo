@@ -143,10 +143,12 @@ jobs:
         run: |
           <html>
           <body>
+          <span>deb https://christopherhx.github.io/test-deb-repo/minecraft-linux/deb focal main</span>
           <span>deb https://christopherhx.github.io/test-deb-repo/minecraft-linux/deb jammy main</span>
           <span>curl -sS https://christopherhx.github.io/test-deb-repo/minecraft-linux/deb/pubkey.gpg | sudo tee -a /etc/apt/trusted.gpg.d/minecraft-linux-test.asc</span>
           </body>
           </html>
+        shell: cp {0} webpage/index.html
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
