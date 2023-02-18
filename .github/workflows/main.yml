@@ -10,20 +10,64 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# Allow one concurrent deployment
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
-
 jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+        - name: focal
+          container: build-deps:focal
+          deps: apt-get update && apt-get install -y --no-install-recommends g++ clang cmake make git ca-certificates libssl-dev libpng-dev libx11-dev libxi-dev libcurl4-openssl-dev libudev-dev libevdev-dev libegl1-mesa-dev libssl-dev libasound2 qtbase5-dev qtwebengine5-dev qtdeclarative5-dev libqt5svg5-dev qml-module-qtquick2 qml-module-qtquick-layouts qml-module-qtquick-controls qml-module-qtquick-controls2 qml-module-qtquick-window2 qml-module-qtquick-dialogs qml-module-qt-labs-settings qml-module-qt-labs-folderlistmodel qml-module-qtwebengine libssl-dev libcurl4-openssl-dev libuv1-dev libzip-dev libprotobuf-dev protobuf-compiler qtbase5-dev qtwebengine5-dev qtdeclarative5-dev libqt5svg5-dev qml-module-qtquick2 qml-module-qtquick-layouts qml-module-qtquick-controls qml-module-qtquick-controls2 qml-module-qtquick-window2 qml-module-qtquick-dialogs qml-module-qt-labs-settings qml-module-qt-labs-folderlistmodel
+    container: ${{ matrix.container}}
+    steps:
+    - name: Install Deps
+      run: ${{ matrix.deps }}
+    - name: Get Sources
+      run: |
+        mkdir mcpelauncher
+        git clone --recursive https://github.com/minecraft-linux/mcpelauncher-manifest mcpelauncher/mcpelauncher-manifest
+        git clone --recursive https://github.com/minecraft-linux/mcpelauncher-ui-manifest mcpelauncher/mcpelauncher-ui-manifest
+        git clone --recursive https://github.com/minecraft-linux/msa-manifest mcpelauncher/msa-manifest
+    - name: Create CMakeLists.txt
+      run: |
+        project(mcpelauncher)
+        include(mcpelauncher-manifest)
+        include(mcpelauncher-ui-manifest)
+        include(msa-manifest)
+
+        set(CPACK_GENERATOR "TGZ;DEB")
+        set(CPACK_PACKAGE_CONTACT "https://github.com/minecraft-linux/mcpelauncher-manifest/issues")
+        set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc")
+
+        include(CPack)
+      shell: cp {0} mcpelauncher/CMakeLists.txt
+    - name: Configure
+      run: CC=clang CXX=clang++ cmake -S mcpelauncher -B mcpelauncher-build
+    - name: Package Source
+      run: cmake --build mcpelauncher-build --target package_source --parallel
+    - name: Build
+      run: cmake --build mcpelauncher-build --target package --parallel
+    - name: Upload artifacts
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.name }}
+        path: | 
+          mcpelauncher-build/*.tar.*
+          mcpelauncher-build/*.deb
+
   # Single deploy job since we're just deploying
   deploy:
+    # Allow one concurrent deployment
+    concurrency:
+      group: "pages"
+      cancel-in-progress: true
+    # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -50,10 +94,14 @@ jobs:
           git clone https://github.com/freight-team/freight.git
           make -C freight && sudo make -C freight install
           rm -rf freight
+      - name: Download package
+        uses: actions/download-artifact@v3
+        with:
+          name: focal
+          path: packages
       - name: Add package
         run: |
-          curl -L https://github.com/TheAssassin/AppImageLauncher/releases/download/v2.2.0/appimagelauncher_2.2.0-travis995.0f91801.bionic_arm64.deb -O
-          myci-freight-add.sh --base-dir $PWD --repo minecraft-linux/deb --distro focal --component main appimagelauncher_2.2.0-travis995.0f91801.bionic_arm64.deb
+          myci-freight-add.sh --base-dir $PWD --repo minecraft-linux/deb --distro focal --component main packages/*.deb
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
