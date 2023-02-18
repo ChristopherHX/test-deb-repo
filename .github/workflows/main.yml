@@ -30,8 +30,8 @@ jobs:
       run: ${{ matrix.deps }}
     - name: Get Sources
       run: |
-        git clone --recursive https://github.com/minecraft-linux/${{ matrix.repo }} ${{ matrix.repo }}
-        mv ${{ matrix.repo }}/CMakeLists.txt ${{ matrix.repo }}/CMakeLists.org.txt
+        git clone --recursive https://github.com/minecraft-linux/${{ matrix.repo }} mcpelauncher
+        mv mcpelauncher/CMakeLists.txt mcpelauncher/CMakeLists.org.txt
     - name: Create CMakeLists.txt
       run: |
         cmake_minimum_required(VERSION 3.0)
@@ -45,7 +45,7 @@ jobs:
         include(CPack)
       shell: cp {0} mcpelauncher/CMakeLists.txt
     - name: Configure
-      run: CC=clang CXX=clang++ cmake -S ${{ matrix.repo }} -B mcpelauncher-build -DUSE_GAMECONTROLLERDB=OFF -DCMAKE_BUILD_TYPE=Release
+      run: CC=clang CXX=clang++ cmake -S mcpelauncher -B mcpelauncher-build -DUSE_GAMECONTROLLERDB=OFF -DCMAKE_BUILD_TYPE=Release
     - name: Package Source
       run: cmake --build mcpelauncher-build --target package_source --parallel
     - name: Build
