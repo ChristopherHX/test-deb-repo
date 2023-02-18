@@ -131,7 +131,7 @@ jobs:
           first_key_email=$(gpg --list-keys | sed -E -n -e 's/.*<([^ >]*)>.*/\1/p' | head -1)
           echo "%_signature gpg" > ~/.rpmmacros
           echo "%_gpg_name \"$first_key_email\"" >> ~/.rpmmacros
-          rpm --add-sign packages/fedora-36/*.rpm packages/fedora-37/*.rpm
+          rpm --addsign packages/fedora-36/*.rpm packages/fedora-37/*.rpm
           mkdir -p webpage/minecraft-linux/fedora-36
           mv packages/fedora-36/*.rpm webpage/minecraft-linux/fedora-36
           mkdir -p webpage/minecraft-linux/fedora-37
