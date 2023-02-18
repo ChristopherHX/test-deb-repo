@@ -59,6 +59,7 @@ jobs:
         set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
         set(CPACK_RPM_PACKAGE_VERSION "0.8.2.${{ github.run_id }}.${{ github.run_attempt }}~${{ matrix.platform.name }}")
         set(CPACK_RPM_SPEC_MORE_DEFINE "%define __spec_install_post /bin/true")
+        set(CPACK_RPM_REQUIRES_EXCLUDE_FROM "share/mcpelauncher/.*")
         set(CPACK_RPM_FILE_NAME RPM-DEFAULT)
 
         include(CPack)
