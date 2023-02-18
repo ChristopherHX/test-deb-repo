@@ -18,7 +18,7 @@ jobs:
       matrix:
         repo:
         - mcpelauncher-manifest
-        - mcpelauncher-i-manifest
+        - mcpelauncher-ui-manifest
         - msa-manifest
         include:
         - name: focal
