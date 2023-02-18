@@ -14,7 +14,12 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
+        repo:
+        - mcpelauncher-manifest
+        - mcpelauncher-i-manifest
+        - msa-manifest
         include:
         - name: focal
           container: buildpack-deps:focal
@@ -25,22 +30,22 @@ jobs:
       run: ${{ matrix.deps }}
     - name: Get Sources
       run: |
-        mkdir mcpelauncher
-        git clone --recursive https://github.com/minecraft-linux/mcpelauncher-manifest mcpelauncher/mcpelauncher-manifest
+        git clone --recursive https://github.com/minecraft-linux/${{ matrix.repo }} ${{ matrix.repo }}
+        mv ${{ matrix.repo }}/CMakeLists.txt ${{ matrix.repo }}/CMakeLists.org.txt
     - name: Create CMakeLists.txt
       run: |
         cmake_minimum_required(VERSION 3.0)
-        project(mcpelauncher)
-        add_subdirectory(mcpelauncher-manifest)
+        project(${{ matrix.repo }})
+        include(./CMakeLists.org.txt)
 
         set(CPACK_GENERATOR "TGZ;DEB")
-        set(CPACK_PACKAGE_CONTACT "https://github.com/minecraft-linux/mcpelauncher-manifest/issues")
+        set(CPACK_PACKAGE_CONTACT "https://github.com/minecraft-linux/${{ matrix.repo }}/issues")
         set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc")
 
         include(CPack)
       shell: cp {0} mcpelauncher/CMakeLists.txt
     - name: Configure
-      run: CC=clang CXX=clang++ cmake -S mcpelauncher -B mcpelauncher-build -DUSE_GAMECONTROLLERDB=OFF -DCMAKE_BUILD_TYPE=Release
+      run: CC=clang CXX=clang++ cmake -S ${{ matrix.repo }} -B mcpelauncher-build -DUSE_GAMECONTROLLERDB=OFF -DCMAKE_BUILD_TYPE=Release
     - name: Package Source
       run: cmake --build mcpelauncher-build --target package_source --parallel
     - name: Build
@@ -50,7 +55,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: ${{ matrix.name }}
-        path: | 
+        path: |
           mcpelauncher-build/*.tar.*
           mcpelauncher-build/*.deb
 
