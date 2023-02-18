@@ -32,9 +32,9 @@ jobs:
     - name: Create CMakeLists.txt
       run: |
         project(mcpelauncher)
-        include(mcpelauncher-manifest)
-        include(mcpelauncher-ui-manifest)
-        include(msa-manifest)
+        add_subdirectory(mcpelauncher-manifest)
+        add_subdirectory(mcpelauncher-ui-manifest)
+        add_subdirectory(msa-manifest)
 
         set(CPACK_GENERATOR "TGZ;DEB")
         set(CPACK_PACKAGE_CONTACT "https://github.com/minecraft-linux/mcpelauncher-manifest/issues")
