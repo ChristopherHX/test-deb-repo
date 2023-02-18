@@ -40,7 +40,7 @@ jobs:
 
         set(CPACK_GENERATOR "TGZ;DEB")
         set(CPACK_PACKAGE_CONTACT "https://github.com/minecraft-linux/${{ matrix.repo }}/issues")
-        set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc ca-certificates qml-module-qtquick2 qml-module-qtquick-layouts qml-module-qtquick-controls qml-module-qtquick-controls2 qml-module-qtquick-window2 qml-module-qtquick-dialogs qml-module-qt-labs-settings qml-module-qt-labs-folderlistmodel")
+        set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, ca-certificates, qml-module-qtquick2, qml-module-qtquick-layouts, qml-module-qtquick-controls, qml-module-qtquick-controls2, qml-module-qtquick-window2, qml-module-qtquick-dialogs, qml-module-qt-labs-settings, qml-module-qt-labs-folderlistmodel")
         set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
 
         include(CPack)
@@ -48,6 +48,7 @@ jobs:
     - name: Configure
       run: CC=clang CXX=clang++ cmake -S mcpelauncher -B mcpelauncher-build -DUSE_GAMECONTROLLERDB=OFF -DCMAKE_BUILD_TYPE=Release
     - name: Package Source
+      if: "false"
       run: cmake --build mcpelauncher-build --target package_source --parallel
     - name: Build
       run: cmake --build mcpelauncher-build --target package --parallel
