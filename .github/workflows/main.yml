@@ -24,10 +24,20 @@ jobs:
         - name: focal
           container: buildpack-deps:focal
           deps: apt-get update && apt-get install -y --no-install-recommends g++ clang cmake make git ca-certificates libssl-dev libpng-dev libx11-dev libxi-dev libcurl4-openssl-dev libudev-dev libevdev-dev libegl1-mesa-dev libssl-dev libasound2 qtbase5-dev qtwebengine5-dev qtdeclarative5-dev libqt5svg5-dev qml-module-qtquick2 qml-module-qtquick-layouts qml-module-qtquick-controls qml-module-qtquick-controls2 qml-module-qtquick-window2 qml-module-qtquick-dialogs qml-module-qt-labs-settings qml-module-qt-labs-folderlistmodel qml-module-qtwebengine libssl-dev libcurl4-openssl-dev libuv1-dev libzip-dev libprotobuf-dev protobuf-compiler qtbase5-dev qtwebengine5-dev qtdeclarative5-dev libqt5svg5-dev qml-module-qtquick2 qml-module-qtquick-layouts qml-module-qtquick-controls qml-module-qtquick-controls2 qml-module-qtquick-window2 qml-module-qtquick-dialogs qml-module-qt-labs-settings qml-module-qt-labs-folderlistmodel
+          generator: DEB
         - name: jammy
           container: buildpack-deps:jammy
           deps: apt-get update && apt-get install -y --no-install-recommends g++ clang cmake make git ca-certificates libssl-dev libpng-dev libx11-dev libxi-dev libcurl4-openssl-dev libudev-dev libevdev-dev libegl1-mesa-dev libssl-dev libasound2 qtbase5-dev qtwebengine5-dev qtdeclarative5-dev libqt5svg5-dev qml-module-qtquick2 qml-module-qtquick-layouts qml-module-qtquick-controls qml-module-qtquick-controls2 qml-module-qtquick-window2 qml-module-qtquick-dialogs qml-module-qt-labs-settings qml-module-qt-labs-folderlistmodel qml-module-qtwebengine libssl-dev libcurl4-openssl-dev libuv1-dev libzip-dev libprotobuf-dev protobuf-compiler qtbase5-dev qtwebengine5-dev qtdeclarative5-dev libqt5svg5-dev qml-module-qtquick2 qml-module-qtquick-layouts qml-module-qtquick-controls qml-module-qtquick-controls2 qml-module-qtquick-window2 qml-module-qtquick-dialogs qml-module-qt-labs-settings qml-module-qt-labs-folderlistmodel
-        
+          generator: DEB
+        - name: fedora-36
+          container: fedora:36
+          deps: dnf install -y cmake clang libstdc++ glibc-devel zlib-devel libX11-devel libXi-devel libXinerama-devel libXcursor-devel libXrandr-devel openssl-devel libcurl-devel mesa-libEGL-devel pulseaudio-libs-devel fedora-packager rpmdevtools
+          generator: RPM
+        - name: fedora-37
+          container: fedora:37
+          deps: dnf install -y cmake clang libstdc++ glibc-devel zlib-devel libX11-devel libXi-devel libXinerama-devel libXcursor-devel libXrandr-devel openssl-devel libcurl-devel mesa-libEGL-devel pulseaudio-libs-devel fedora-packager rpmdevtools
+          generator: RPM
+
     container: ${{ matrix.platform.container}}
     steps:
     - name: Install Deps
@@ -42,16 +52,18 @@ jobs:
         project(${{ matrix.repo }})
         include(./CMakeLists.org.txt)
 
-        set(CPACK_GENERATOR "TGZ;DEB")
+        set(CPACK_GENERATOR "TGZ;${{ matrix.platform.generator }}")
         set(CPACK_PACKAGE_CONTACT "https://github.com/minecraft-linux/${{ matrix.repo }}/issues")
         set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, ca-certificates, qml-module-qtquick2, qml-module-qtquick-layouts, qml-module-qtquick-controls, qml-module-qtquick-controls2, qml-module-qtquick-window2, qml-module-qtquick-dialogs, qml-module-qt-labs-settings, qml-module-qt-labs-folderlistmodel")
         set(CPACK_DEBIAN_PACKAGE_VERSION "0.8.2.${{ github.run_id }}.${{ github.run_attempt }}~${{ matrix.platform.name }}")
         set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
+        set(CPACK_RPM_PACKAGE_VERSION "0.8.2.${{ github.run_id }}.${{ github.run_attempt }}~${{ matrix.platform.name }}")
+        set(CPACK_RPM_FILE_NAME RPM-DEFAULT)
 
         include(CPack)
       shell: cp {0} mcpelauncher/CMakeLists.txt
     - name: Configure
-      run: CC=clang CXX=clang++ cmake -S mcpelauncher -B mcpelauncher-build -DUSE_GAMECONTROLLERDB=OFF -DCMAKE_BUILD_TYPE=Release
+      run: CC=clang CXX=clang++ cmake -S mcpelauncher -B mcpelauncher-build -DCMAKE_BUILD_TYPE=Release
     - name: Package Source
       if: "false"
       run: cmake --build mcpelauncher-build --target package_source --parallel
@@ -65,6 +77,7 @@ jobs:
         path: |
           mcpelauncher-build/*.tar.*
           mcpelauncher-build/*.deb
+          mcpelauncher-build/*.rpm
 
   # Single deploy job since we're just deploying
   deploy:
