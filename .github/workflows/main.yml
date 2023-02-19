@@ -28,6 +28,8 @@ jobs:
         - name: focal
           container: buildpack-deps:focal
           deps: |
+            echo "deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu/ focal main universe multiverse restricted" > /etc/apt/sources.list
+            echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ubuntu-ports/ focal main universe multiverse restricted" >> /etc/apt/sources.list
             dpkg --add-architecture arm64 && dpkg --add-architecture armhf && apt update && DEBIAN_FRONTEND=noninteractive apt install -y libfuse-dev:arm64 wget texinfo apt-transport-https vim-common qemu-user clang-9 chrpath libstdc++-8-dev:arm64 libstdc++-8-dev:armhf libatomic1:armhf libatomic1:arm64 wget cmake g++-arm-linux-gnueabihf g++-aarch64-linux-gnu patchelf libpng-dev:armhf libx11-dev:armhf libxi-dev:armhf libcurl4-openssl-dev:armhf libudev-dev:armhf libevdev-dev:armhf libegl1-mesa-dev:armhf libasound2:armhf qt5-default:arm64 git cmake pkg-config qtbase5-dev:arm64 qtwebengine5-dev:arm64 libssl-dev:arm64 libcurl4-openssl-dev:arm64 libpng-dev:arm64 libx11-dev:arm64 libxi-dev:arm64 libssl-dev:arm64 libudev-dev:arm64 libevdev-dev:arm64 libegl1-mesa-dev:arm64 libgl1-mesa-dev:arm64 libssl-dev:arm64 libuv1-dev:arm64 libzip-dev:arm64 libprotobuf-dev:arm64 protobuf-compiler qtdeclarative5-dev:arm64 libqt5svg5-dev:arm64 qml-module-qtwebengine:arm64 qml-module-qtquick2:arm64 qml-module-qtquick-layouts:arm64 qml-module-qtquick-controls:arm64 qml-module-qtquick-controls2:arm64 qml-module-qtquick-window2:arm64 qml-module-qtquick-dialogs:arm64 qml-module-qt-labs-settings:arm64 qml-module-qt-labs-folderlistmodel:arm64 jq curl binutils desktop-file-utils squashfs-tools qtdeclarative5-dev-tools:arm64 libssl-dev:arm64 libpulse-dev:arm64 libssl-dev:armhf libpulse-dev:armhf
             echo PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig/ >> $GITHUB_PATH
             echo PATH=/usr/lib/aarch64-linux-gnu/qt5/bin/:$PATH >> $GITHUB_PATH
@@ -55,6 +57,8 @@ jobs:
         - name: jammy
           container: buildpack-deps:jammy
           deps: |
+            echo "deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu/ jammy main universe multiverse restricted" > /etc/apt/sources.list
+            echo "deb [arch=arm64,armhf] http://ports.ubuntu.com/ubuntu-ports/ jammy main universe multiverse restricted" >> /etc/apt/sources.list
             dpkg --add-architecture arm64 && dpkg --add-architecture armhf && apt update && DEBIAN_FRONTEND=noninteractive apt install -y libfuse-dev:arm64 wget texinfo apt-transport-https vim-common qemu-user clang-9 chrpath libstdc++-8-dev:arm64 libstdc++-8-dev:armhf libatomic1:armhf libatomic1:arm64 wget cmake g++-arm-linux-gnueabihf g++-aarch64-linux-gnu patchelf libpng-dev:armhf libx11-dev:armhf libxi-dev:armhf libcurl4-openssl-dev:armhf libudev-dev:armhf libevdev-dev:armhf libegl1-mesa-dev:armhf libasound2:armhf qt5-default:arm64 git cmake pkg-config qtbase5-dev:arm64 qtwebengine5-dev:arm64 libssl-dev:arm64 libcurl4-openssl-dev:arm64 libpng-dev:arm64 libx11-dev:arm64 libxi-dev:arm64 libssl-dev:arm64 libudev-dev:arm64 libevdev-dev:arm64 libegl1-mesa-dev:arm64 libgl1-mesa-dev:arm64 libssl-dev:arm64 libuv1-dev:arm64 libzip-dev:arm64 libprotobuf-dev:arm64 protobuf-compiler qtdeclarative5-dev:arm64 libqt5svg5-dev:arm64 qml-module-qtwebengine:arm64 qml-module-qtquick2:arm64 qml-module-qtquick-layouts:arm64 qml-module-qtquick-controls:arm64 qml-module-qtquick-controls2:arm64 qml-module-qtquick-window2:arm64 qml-module-qtquick-dialogs:arm64 qml-module-qt-labs-settings:arm64 qml-module-qt-labs-folderlistmodel:arm64 jq curl binutils desktop-file-utils squashfs-tools qtdeclarative5-dev-tools:arm64 libssl-dev:arm64 libpulse-dev:arm64 libssl-dev:armhf libpulse-dev:armhf
             echo PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig/ >> $GITHUB_PATH
             echo PATH=/usr/lib/aarch64-linux-gnu/qt5/bin/:$PATH >> $GITHUB_PATH
@@ -101,9 +105,10 @@ jobs:
     steps:
     - name: Install Deps
       run: ${{ matrix.platform.deps }}
+      shell: bash
     - name: Get Sources
       run: |
-        git clone --recursive https://github.com/minecraft-linux/${{ matrix.repo }} mcpelauncher ${{ matrix.platform.branch[matrix.repo] }}
+        git clone --recursive https://github.com/minecraft-linux/${{ matrix.repo }} mcpelauncher ${{ matrix.platform.branch[matrix.repo] && format('-b {0}', matrix.platform.branch[matrix.repo]) }}
         mv mcpelauncher/CMakeLists.txt mcpelauncher/CMakeLists.org.txt
     - name: Create CMakeLists.txt
       run: |
