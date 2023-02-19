@@ -223,7 +223,7 @@ jobs:
                       for(var f of build.buildfiles) {
                         console.log(JSON.stringify(f));
                         var fullpath = path.join("packages", f.pkgpath);
-                        fs.mkdirSync(fs.dirname(fullpath), {recursive: true});
+                        fs.mkdirSync(path.dirname(fullpath), {recursive: true});
                         await exec.exec("curl", ["-L", `${rootUrl}/${f.path}`, "--output", fullpath]);
                       }
                     }
