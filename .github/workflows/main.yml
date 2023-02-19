@@ -320,7 +320,7 @@ jobs:
             var fs = require("fs");
             var releaseIndex = JSON.parse(${{ toJSON(steps.release-index.outputs.result) }});
             var index = releaseIndex.index || {};
-            const globber = await glob.create("webapp/**", { matchDirectories: false });
+            const globber = await glob.create("webpage/**", { matchDirectories: false });
             var allfiles = [];
             var buildmap = {};
             var buildfiles = [];
@@ -328,7 +328,7 @@ jobs:
               buildmap[path.basename(pkg)] = pkg;
             }
             for await (const file of globber.globGenerator()) {
-              var rfile = path.relative(path.join(process.cwd(), "webapp"), file);
+              var rfile = path.relative(path.join(process.cwd(), "webpage"), file);
               allfiles.push(rfile);
               var pkgpath = buildmap[path.basename(file)];
               if(pkgpath) {
@@ -346,7 +346,7 @@ jobs:
               builds = index.versions[channel] = [];
             }
             builds.push({ buildfiles });
-            fs.writeFileSync("webapp/index.json", JSON.stringify(index));
+            fs.writeFileSync("webpage/index.json", JSON.stringify(index));
 
       - name: Setup Pages
         uses: actions/configure-pages@v3
