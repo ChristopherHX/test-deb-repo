@@ -170,6 +170,9 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    env:
+      BASE_URL: https://${{ github.repository_owner }}.github.io${{ github.repository_owner != github.event.repository.name && format('/{0}', github.event.repository.name) || '' }}
+      REPO_NAME: ${{ github.repository_owner != github.event.repository.name && format('{0}-{1}', github.repository_owner, github.event.repository.name) || github.repository_owner }}
     steps:
       - name: Import gpg private key
         run: |
@@ -177,13 +180,18 @@ jobs:
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
 
+      - name: Download package
+        uses: actions/download-artifact@v3
+        with:
+          path: packages
+
       - name: create release index
         uses: actions/github-script@v6
         id: release-index
         with:
           github-token: _
           script: |
-            var rootUrl = "https://christopherhx.github.io/test-deb-repo";
+            var rootUrl = "${{ env.BASE_URL }}";
             var channelconfig = {
               nightly: 2,
               releases: 5,
@@ -240,10 +248,7 @@ jobs:
           git clone https://github.com/freight-team/freight.git
           make -C freight && sudo make -C freight install
           rm -rf freight
-      - name: Download package
-        uses: actions/download-artifact@v3
-        with:
-          path: packages
+
       - name: Add package
         run: |
           mkdir webpage
@@ -269,38 +274,38 @@ jobs:
           <html>
           <body>
           <h1>Debian and Ubuntu apt repos</h1>
-          <p>deb https://${{ github.repository_owner }}.github.io/${{ github.repository_owner != github.event.repository.name && format('{0}/', github.event.repository.name) || ''}}deb focal main</p>
-          <p>deb https://${{ github.repository_owner }}.github.io/${{ github.repository_owner != github.event.repository.name && format('{0}/', github.event.repository.name) || ''}}deb jammy main</p>
-          <p>deb https://${{ github.repository_owner }}.github.io/${{ github.repository_owner != github.event.repository.name && format('{0}/', github.event.repository.name) || ''}}deb kinetic main</p>
-          <p>deb https://${{ github.repository_owner }}.github.io/${{ github.repository_owner != github.event.repository.name && format('{0}/', github.event.repository.name) || ''}}deb bullseye main</p>
-          <p>deb https://${{ github.repository_owner }}.github.io/${{ github.repository_owner != github.event.repository.name && format('{0}/', github.event.repository.name) || ''}}deb bookworm main</p>
-          <p>curl -sS https://${{ github.repository_owner }}.github.io/${{ github.repository_owner != github.event.repository.name && format('{0}/', github.event.repository.name) || ''}}deb/pubkey.gpg | sudo tee -a /etc/apt/trusted.gpg.d/${{ github.repository_owner != github.event.repository.name && format('{0}-{1}', github.repository_owner, github.event.repository.name) || github.repository_owner}}.asc</p>
+          <p>deb ${{ env.BASE_URL }}/deb focal main</p>
+          <p>deb ${{ env.BASE_URL }}/deb jammy main</p>
+          <p>deb ${{ env.BASE_URL }}/deb kinetic main</p>
+          <p>deb ${{ env.BASE_URL }}/deb bullseye main</p>
+          <p>deb ${{ env.BASE_URL }}/deb bookworm main</p>
+          <p>curl -sS ${{ env.BASE_URL }}/deb/pubkey.gpg | sudo tee -a /etc/apt/trusted.gpg.d/${{ env.REPO_NAME }}.asc</p>
           <h1>Fedora</h1>
           <h2>36</h2>
           <p>
-          [${{ github.repository_owner != github.event.repository.name && format('{0}-{1}', github.repository_owner, github.event.repository.name) || github.repository_owner}}]<br/>
+          [${{ env.REPO_NAME }}]<br/>
           name=minecraft-linux-test
-          baseurl=https://${{ github.repository_owner }}.github.io/${{ github.repository_owner != github.event.repository.name && format('{0}/', github.event.repository.name) || ''}}fedora-36
+          baseurl=${{ env.BASE_URL }}/fedora-36
           enabled=1
           countme=1
           repo_gpgcheck=0
           type=rpm
           gpgcheck=1
           skip_if_unavailable=False
-          gpgkey=https://${{ github.repository_owner }}.github.io/${{ github.repository_owner != github.event.repository.name && format('{0}/', github.event.repository.name) || ''}}deb/pubkey.gpg
+          gpgkey=${{ env.BASE_URL }}/deb/pubkey.gpg
           </p>
           <h2>37</h2>
           <p>
-          [${{ github.repository_owner != github.event.repository.name && format('{0}-{1}', github.repository_owner, github.event.repository.name) || github.repository_owner}}]<br/>
+          [${{ env.REPO_NAME }}]<br/>
           name=minecraft-linux-test
-          baseurl=https://${{ github.repository_owner }}.github.io/${{ github.repository_owner != github.event.repository.name && format('{0}/', github.event.repository.name) || ''}}fedora-37
+          baseurl=${{ env.BASE_URL }}/fedora-37
           enabled=1
           countme=1
           repo_gpgcheck=0
           type=rpm
           gpgcheck=1
           skip_if_unavailable=False
-          gpgkey=https://${{ github.repository_owner }}.github.io/${{ github.repository_owner != github.event.repository.name && format('{0}/', github.event.repository.name) || ''}}deb/pubkey.gpg
+          gpgkey=${{ env.BASE_URL }}/deb/pubkey.gpg
           </p>
           </body>
           </html>
