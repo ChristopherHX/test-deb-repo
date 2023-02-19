@@ -185,9 +185,8 @@ jobs:
         with:
           path: packages
 
-      - name: create release index
+      - name: create release index and sync old packages
         uses: actions/github-script@v6
-        id: release-index
         with:
           github-token: _
           script: |
@@ -231,7 +230,7 @@ jobs:
                 }
               }
             }
-            return { packages: packages, index };
+            fs.writeFileSync("release-index.json", JSON.stringify({ packages: packages, index }));
       
       - name: add cppfw repo to install myci scripts from
         uses: myci-actions/add-deb-repo@master
@@ -318,7 +317,7 @@ jobs:
           script: |
             var path = require("path");
             var fs = require("fs");
-            var releaseIndex = JSON.parse(${{ toJSON(steps.release-index.outputs.result) }});
+            var releaseIndex = JSON.parse(fs.readFileSync("release-index.json", { encoding: "utf8" }));
             var index = releaseIndex.index || {};
             const globber = await glob.create("webpage/**", { matchDirectories: false });
             var allfiles = [];
