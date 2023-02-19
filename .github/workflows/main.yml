@@ -176,6 +176,54 @@ jobs:
           echo "$GPG_PRIVATE_KEY" | gpg --import
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+
+      - name: create release index
+        uses: actions/github-script@v6
+        id: release-index
+        with:
+          github-token: _
+          script: |
+            var rootUrl = "https://christopherhx.github.io/test-deb-repo";
+            var channelconfig = {
+              nightly: 2,
+              releases: 5,
+            };
+            var path = require("path");
+            var fs = require("fs");
+            var index = {};
+            try {
+              const response = await fetch(`${rootUrl}/index.json`);
+              index = await response.json();
+            } catch {
+              console.log("Previous index is unavailable");
+            }
+            const globber = await glob.create("packages/**", { matchDirectories: false });
+            var packages = [];
+            for await (const file of globber.globGenerator()) {
+              var rfile = path.relative(path.join(process.cwd(), "packages"), file);
+              packages.push(rfile);
+            }
+            if(index.versions) {
+              for(var channel in index.versions) {
+                var builds = index.versions[channel];
+                if(builds) {
+                  if(builds.length > (channelconfig[channel] || 1)) {
+                    builds.shift();
+                  }
+                  for(var build of builds) {
+                    if(build.buildfiles) {
+                      for(var f of build.buildfiles) {
+                        console.log(JSON.stringify(f));
+                        var fullpath = path.join("packages", f.pkgpath);
+                        fs.mkdirSync(fs.dirname(fullpath), {recursive: true});
+                        await exec.exec("curl", ["-L", `${rootUrl}/${f.path}`, "--output", fullpath]);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            return { packages: packages, index };
       
       - name: add cppfw repo to install myci scripts from
         uses: myci-actions/add-deb-repo@master
@@ -199,33 +247,102 @@ jobs:
       - name: Add package
         run: |
           mkdir webpage
-          myci-freight-add.sh --base-dir $PWD/webpage --repo minecraft-linux/deb --distro focal --component main packages/focal/*.deb
-          myci-freight-add.sh --base-dir $PWD/webpage --repo minecraft-linux/deb --distro jammy --component main packages/jammy/*.deb
-          myci-freight-add.sh --base-dir $PWD/webpage --repo minecraft-linux/deb --distro kinetic --component main packages/kinetic/*.deb
-          myci-freight-add.sh --base-dir $PWD/webpage --repo minecraft-linux/deb --distro bullseye --component main packages/bullseye/*.deb
-          myci-freight-add.sh --base-dir $PWD/webpage --repo minecraft-linux/deb --distro bookworm --component main packages/bookworm/*.deb
+          myci-freight-add.sh --base-dir $PWD --repo webpage/deb --distro focal --component main packages/focal/*.deb
+          myci-freight-add.sh --base-dir $PWD --repo webpage/deb --distro jammy --component main packages/jammy/*.deb
+          myci-freight-add.sh --base-dir $PWD --repo webpage/deb --distro kinetic --component main packages/kinetic/*.deb
+          myci-freight-add.sh --base-dir $PWD --repo webpage/deb --distro bullseye --component main packages/bullseye/*.deb
+          myci-freight-add.sh --base-dir $PWD --repo webpage/deb --distro bookworm --component main packages/bookworm/*.deb
 
           first_key_email=$(gpg --list-keys | sed -E -n -e 's/.*<([^ >]*)>.*/\1/p' | head -1)
           echo "%_signature gpg" > ~/.rpmmacros
           echo "%_gpg_name \"$first_key_email\"" >> ~/.rpmmacros
           rpm --addsign packages/fedora-36/*.rpm packages/fedora-37/*.rpm
-          mkdir -p webpage/minecraft-linux/fedora-36
-          mv packages/fedora-36/*.rpm webpage/minecraft-linux/fedora-36
-          mkdir -p webpage/minecraft-linux/fedora-37
-          mv packages/fedora-37/*.rpm webpage/minecraft-linux/fedora-37
-          docker run --rm -v $PWD/webpage:/webpage fedora:37 bash -c "dnf install -y createrepo && createrepo /webpage/minecraft-linux/fedora-36 && createrepo /webpage/minecraft-linux/fedora-37"
-          sudo chown -R "$UID:$UID" webpage/minecraft-linux/fedora-36
-          sudo chown -R "$UID:$UID" webpage/minecraft-linux/fedora-37
+          mkdir -p webpage/fedora-36
+          mv packages/fedora-36/*.rpm webpage/fedora-36
+          mkdir -p webpage/fedora-37
+          mv packages/fedora-37/*.rpm webpage/fedora-37
+          docker run --rm -v $PWD/webpage:/webpage fedora:37 bash -c "dnf install -y createrepo && createrepo /webpage/fedora-36 && createrepo /webpage/fedora-37"
+          sudo chown -R "$UID:$UID" webpage/fedora-36
+          sudo chown -R "$UID:$UID" webpage/fedora-37
       - name: Add default html
         run: |
           <html>
           <body>
-          <span>deb https://christopherhx.github.io/test-deb-repo/minecraft-linux/deb focal main</span>
-          <span>deb https://christopherhx.github.io/test-deb-repo/minecraft-linux/deb jammy main</span>
-          <span>curl -sS https://christopherhx.github.io/test-deb-repo/minecraft-linux/deb/pubkey.gpg | sudo tee -a /etc/apt/trusted.gpg.d/minecraft-linux-test.asc</span>
+          <h1>Debian and Ubuntu apt repos</h1>
+          <p>deb https://${{ github.repository_owner }}.github.io/${{ github.repository_owner != github.event.repository.name && format('{0}/', github.event.repository.name) || ''}}deb focal main</p>
+          <p>deb https://${{ github.repository_owner }}.github.io/${{ github.repository_owner != github.event.repository.name && format('{0}/', github.event.repository.name) || ''}}deb jammy main</p>
+          <p>deb https://${{ github.repository_owner }}.github.io/${{ github.repository_owner != github.event.repository.name && format('{0}/', github.event.repository.name) || ''}}deb kinetic main</p>
+          <p>deb https://${{ github.repository_owner }}.github.io/${{ github.repository_owner != github.event.repository.name && format('{0}/', github.event.repository.name) || ''}}deb bullseye main</p>
+          <p>deb https://${{ github.repository_owner }}.github.io/${{ github.repository_owner != github.event.repository.name && format('{0}/', github.event.repository.name) || ''}}deb bookworm main</p>
+          <p>curl -sS https://${{ github.repository_owner }}.github.io/${{ github.repository_owner != github.event.repository.name && format('{0}/', github.event.repository.name) || ''}}deb/pubkey.gpg | sudo tee -a /etc/apt/trusted.gpg.d/${{ github.repository_owner != github.event.repository.name && format('{0}-{1}', github.repository_owner, github.event.repository.name) || github.repository_owner}}.asc</p>
+          <h1>Fedora</h1>
+          <h2>36</h2>
+          <p>
+          [${{ github.repository_owner != github.event.repository.name && format('{0}-{1}', github.repository_owner, github.event.repository.name) || github.repository_owner}}]<br/>
+          name=minecraft-linux-test
+          baseurl=https://${{ github.repository_owner }}.github.io/${{ github.repository_owner != github.event.repository.name && format('{0}/', github.event.repository.name) || ''}}fedora-36
+          enabled=1
+          countme=1
+          repo_gpgcheck=0
+          type=rpm
+          gpgcheck=1
+          skip_if_unavailable=False
+          gpgkey=https://${{ github.repository_owner }}.github.io/${{ github.repository_owner != github.event.repository.name && format('{0}/', github.event.repository.name) || ''}}deb/pubkey.gpg
+          </p>
+          <h2>37</h2>
+          <p>
+          [${{ github.repository_owner != github.event.repository.name && format('{0}-{1}', github.repository_owner, github.event.repository.name) || github.repository_owner}}]<br/>
+          name=minecraft-linux-test
+          baseurl=https://${{ github.repository_owner }}.github.io/${{ github.repository_owner != github.event.repository.name && format('{0}/', github.event.repository.name) || ''}}fedora-37
+          enabled=1
+          countme=1
+          repo_gpgcheck=0
+          type=rpm
+          gpgcheck=1
+          skip_if_unavailable=False
+          gpgkey=https://${{ github.repository_owner }}.github.io/${{ github.repository_owner != github.event.repository.name && format('{0}/', github.event.repository.name) || ''}}deb/pubkey.gpg
+          </p>
           </body>
           </html>
         shell: cp {0} webpage/index.html
+
+      - name: create archive index
+        uses: actions/github-script@v6
+        with:
+          github-token: _
+          script: |
+            var path = require("path");
+            var fs = require("fs");
+            var releaseIndex = JSON.parse(${{ toJSON(steps.release-index.outputs.result) }});
+            var index = releaseIndex.index || {};
+            const globber = await glob.create("webapp/**", { matchDirectories: false });
+            var allfiles = [];
+            var buildmap = {};
+            var buildfiles = [];
+            for(pkg of releaseIndex.packages) {
+              buildmap[path.basename(pkg)] = pkg;
+            }
+            for await (const file of globber.globGenerator()) {
+              var rfile = path.relative(path.join(process.cwd(), "webapp"), file);
+              allfiles.push(rfile);
+              var pkgpath = buildmap[path.basename(file)];
+              if(pkgpath) {
+                buildfiles.push({ pkgpath, path: rfile });
+              }
+            }
+            index.allfiles = allfiles;
+            index.packages = releaseIndex.packages;
+            var channel = "nightly";
+            if(!index.versions) {
+              index.versions = {};
+            }
+            var builds = index.versions[channel];
+            if(!builds) {
+              builds = index.versions[channel] = [];
+            }
+            builds.push({ buildfiles });
+            fs.writeFileSync("webapp/index.json", JSON.stringify(index));
+
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
