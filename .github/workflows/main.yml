@@ -284,28 +284,28 @@ jobs:
           <h2>36</h2>
           <p>
           [${{ env.REPO_NAME }}]<br/>
-          name=minecraft-linux-test
-          baseurl=${{ env.BASE_URL }}/fedora-36
-          enabled=1
-          countme=1
-          repo_gpgcheck=0
-          type=rpm
-          gpgcheck=1
-          skip_if_unavailable=False
-          gpgkey=${{ env.BASE_URL }}/deb/pubkey.gpg
+          name=${{ env.REPO_NAME }}<br/>
+          baseurl=${{ env.BASE_URL }}/fedora-36<br/>
+          enabled=1<br/>
+          countme=1<br/>
+          repo_gpgcheck=0<br/>
+          type=rpm<br/>
+          gpgcheck=1<br/>
+          skip_if_unavailable=False<br/>
+          gpgkey=${{ env.BASE_URL }}/deb/pubkey.gpg<br/>
           </p>
           <h2>37</h2>
           <p>
           [${{ env.REPO_NAME }}]<br/>
-          name=minecraft-linux-test
-          baseurl=${{ env.BASE_URL }}/fedora-37
-          enabled=1
-          countme=1
-          repo_gpgcheck=0
-          type=rpm
-          gpgcheck=1
-          skip_if_unavailable=False
-          gpgkey=${{ env.BASE_URL }}/deb/pubkey.gpg
+          name=${{ env.REPO_NAME }}<br/>
+          baseurl=${{ env.BASE_URL }}/fedora-37<br/>
+          enabled=1<br/>
+          countme=1<br/>
+          repo_gpgcheck=0<br/>
+          type=rpm<br/>
+          gpgcheck=1<br/>
+          skip_if_unavailable=False<br/>
+          gpgkey=${{ env.BASE_URL }}/deb/pubkey.gpg<br/>
           </p>
           </body>
           </html>
