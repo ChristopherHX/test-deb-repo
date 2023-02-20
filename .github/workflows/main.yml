@@ -20,7 +20,7 @@ jobs:
     uses: ./.github/workflows/build-linux.yml
 
   deploy:
-    if: "!failed() && !cancelled()"
+    if: "!failure() && !cancelled()"
     permissions:
       contents: read
       pages: write
