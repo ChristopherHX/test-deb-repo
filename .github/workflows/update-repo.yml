@@ -247,8 +247,8 @@ jobs:
                   await exec.exec("rpm", ["--addsign", file]);
                   fs.mkdirSync(path.join("webapp", repo.path), {recursive: true});
                   fs.copyFileSync(file, path.join("webapp", repo.path, path.basename(file)));
-                  rpmrepos.push(`createrepo ${path.join("/webapp", repo.path)}`);
                 }
+                rpmrepos.push(`createrepo ${path.join("/webapp", repo.path)}`);
               }
             }
             if(rpmrepos.length > 0) {
