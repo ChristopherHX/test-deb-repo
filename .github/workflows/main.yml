@@ -15,5 +15,5 @@ jobs:
     uses: ./.github/workflows/build-linux.yml
 
   deploy:
-    needs: build-linux
+    needs: build
     uses: ./.github/workflows/update-repo.yml
