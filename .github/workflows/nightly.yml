@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - run: npm install semver
-    - run: echo "version=$(semver "$(cat version.txt))" -i patch > $GITHUB_OUTPUT
+    - run: echo "version=$(semver "$(cat version.txt)")" -i patch > $GITHUB_OUTPUT
       id: out
     outputs:
       version: ${{ steps.out.outputs.version }}
