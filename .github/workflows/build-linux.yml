@@ -6,6 +6,15 @@ on:
       channel:
         type: string
         default: nightly
+      version:
+        type: string
+        default: "0.8.2"
+      changelog:
+        type: string
+        default: ""
+      versionsdbremote:
+        type: string
+        default: master
 jobs:
   build-linux:
     runs-on: ubuntu-latest
@@ -108,7 +117,8 @@ jobs:
         include:
         - cmakeflags:
             mcpelauncher-manifest: -DENABLE_DEV_PATHS=OFF
-            msa-manifest: -DENABLE_MSA_QT_UI=ON -DMSA_UI_PATH_DEV=OFF
+            mcpelauncher-ui-manifest: -DLAUNCHER_VERSION_NAME="${{ inputs.version }}.${{ github.run_id }}.${{ github.run_attempt }}" -DLAUNCHER_VERSION_CODE="${{ github.run_id }}" -DLAUNCHER_CHANGE_LOG="Launcher ${{ inputs.version }}<br/>${{ inputs.changelog }}" -DLAUNCHER_VERSIONDB_URL=https://raw.githubusercontent.com/minecraft-linux/mcpelauncher-versiondb/${{ inputs.versionsdbremote }}
+            msa-manifest: -DENABLE_MSA_QT_UI=ON -DMSA_UI_PATH_DEV=OFF 
 
     container: ${{ matrix.platform.container}}
     steps:
@@ -128,9 +138,9 @@ jobs:
         set(CPACK_GENERATOR "TGZ;${{ matrix.platform.generator }}")
         set(CPACK_PACKAGE_CONTACT "https://github.com/minecraft-linux/${{ matrix.repo }}/issues")
         set(CPACK_DEBIAN_PACKAGE_DEPENDS "${{ matrix.platform.pkg-deps || 'libc6, ca-certificates, qml-module-qtquick2, qml-module-qtquick-layouts, qml-module-qtquick-controls, qml-module-qtquick-controls2, qml-module-qtquick-window2, qml-module-qtquick-dialogs, qml-module-qt-labs-settings, qml-module-qt-labs-folderlistmodel' }}")
-        set(CPACK_DEBIAN_PACKAGE_VERSION "0.8.2.${{ github.run_id }}.${{ github.run_attempt }}~${{ matrix.platform.name }}")
+        set(CPACK_DEBIAN_PACKAGE_VERSION "${{ inputs.version }}.${{ github.run_id }}.${{ github.run_attempt }}~${{ matrix.platform.name }}")
         set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
-        set(CPACK_RPM_PACKAGE_VERSION "0.8.2.${{ github.run_id }}.${{ github.run_attempt }}~${{ matrix.platform.name }}")
+        set(CPACK_RPM_PACKAGE_VERSION "${{ inputs.version }}.${{ github.run_id }}.${{ github.run_attempt }}~${{ matrix.platform.name }}")
         set(CPACK_RPM_SPEC_MORE_DEFINE "%define __spec_install_post /bin/true")
         set(CPACK_RPM_REQUIRES_EXCLUDE_FROM "share/mcpelauncher/.*")
         set(CPACK_RPM_FILE_NAME RPM-DEFAULT)
