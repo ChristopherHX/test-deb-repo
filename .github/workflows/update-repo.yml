@@ -252,7 +252,7 @@ jobs:
               }
             }
             if(rpmrepos.length > 0) {
-              await exec.exec("docker", ["run", "--rm", "-v", `${path.join(process.cwd(), "webpage"):/webpage}`, "fedora:latest", "bash", "-c", `dnf install -y createrepo && ${rpmrepos.join(" && ")}`]);
+              await exec.exec("docker", ["run", "--rm", "-v", `${path.join(process.cwd(), "webpage")}:/webpage}`, "fedora:latest", "bash", "-c", `dnf install -y createrepo && ${rpmrepos.join(" && ")}`]);
             }
 
       - name: Fix webapp permissions
