@@ -246,7 +246,7 @@ jobs:
                 fs.mkdirSync(path.join("webpage", repo.path), {recursive: true});
                 for await (const file of globber.globGenerator()) {
                   var destPath = path.join("webpage", repo.path, path.basename(file));
-                  console.log(`copy ${file} to ${destPath});
+                  console.log(`copy ${file} to ${destPath}`);
                   fs.copyFileSync(file, destPath);
                   await exec.exec("rpm", ["--addsign", destPath]);
                 }
