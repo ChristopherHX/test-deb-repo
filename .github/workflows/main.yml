@@ -15,5 +15,10 @@ jobs:
     uses: ./.github/workflows/build-linux.yml
 
   deploy:
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     needs: build
     uses: ./.github/workflows/update-repo.yml
+    secrets: inherit
