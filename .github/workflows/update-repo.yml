@@ -114,7 +114,7 @@ on:
             "release": 5
           }
     secrets:
-      GPG_PRIVATE_KEY:{}
+      GPG_PRIVATE_KEY: {}
 jobs:
   deploy:
     # Allow one concurrent deployment
