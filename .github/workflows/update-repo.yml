@@ -243,10 +243,12 @@ jobs:
               } else if(repo.type === "rpm") {
                 const globber = await glob.create(`packages/${repo.artifact}/**/*.rpm`, { matchDirectories: false });
                 var packages = [];
+                fs.mkdirSync(path.join("webpage", repo.path), {recursive: true});
                 for await (const file of globber.globGenerator()) {
-                  await exec.exec("rpm", ["--addsign", file]);
-                  fs.mkdirSync(path.join("webpage", repo.path), {recursive: true});
-                  fs.copyFileSync(file, path.join("webpage", repo.path, path.basename(file)));
+                  var destPath = path.join("webpage", repo.path, path.basename(file));
+                  console.log(`copy ${file} to ${destPath});
+                  fs.copyFileSync(file, destPath);
+                  await exec.exec("rpm", ["--addsign", destPath]);
                 }
                 rpmrepos.push(`createrepo ${path.join("/webpage", repo.path)}`);
               }
